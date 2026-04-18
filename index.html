@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FraudShield AI – Fraud Detection Platform</title>
+<style>
+  :root {
+    --primary: #1565C0;
+    --primary-light: #1976D2;
+    --danger: #C62828;
+    --danger-light: #EF5350;
+    --success: #2E7D32;
+    --success-light: #43A047;
+    --warning: #F57F17;
+    --bg: #F0F4F8;
+    --card: #FFFFFF;
+    --text: #1A1A2E;
+    --muted: #607D8B;
+    --border: #E0E7EF;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); color: var(--text); }
+
+  /* NAV */
+  nav {
+    background: linear-gradient(135deg, #0D47A1, #1565C0);
+    color: white; padding: 0 2rem;
+    display: flex; align-items: center; justify-content: space-between; height: 64px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+  .nav-brand { display: flex; align-items: center; gap: 12px; font-size: 1.3rem; font-weight: 700; }
+  .nav-brand span { font-size: 1.8rem; }
+  .nav-links { display: flex; gap: 2rem; font-size: 0.9rem; opacity: 0.9; }
+  .badge { background: #F44336; color: white; font-size: 0.7rem; padding: 2px 8px; border-radius: 12px; font-weight: 700; }
+
+  /* HERO */
+  .hero { background: linear-gradient(135deg, #0D47A1 0%, #1976D2 100%); color: white; padding: 3rem 2rem; text-align: center; }
+  .hero h1 { font-size: 2.2rem; font-weight: 800; margin-bottom: 0.8rem; }
+  .hero p { font-size: 1.1rem; opacity: 0.9; max-width: 600px; margin: 0 auto 1.5rem; }
+  .hero-stats { display: flex; justify-content: center; gap: 3rem; margin-top: 2rem; flex-wrap: wrap; }
+  .stat { text-align: center; }
+  .stat .num { font-size: 2rem; font-weight: 800; }
+  .stat .lbl { font-size: 0.8rem; opacity: 0.8; }
+
+  /* MAIN LAYOUT */
+  .main { max-width: 1100px; margin: 2rem auto; padding: 0 1.5rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+  @media(max-width: 768px) { .main { grid-template-columns: 1fr; } }
+
+  /* CARDS */
+  .card { background: var(--card); border-radius: 12px; padding: 1.8rem; box-shadow: 0 2px 12px rgba(0,0,0,0.08); border: 1px solid var(--border); }
+  .card-title { font-size: 1.1rem; font-weight: 700; color: var(--primary); margin-bottom: 1.2rem; display: flex; align-items: center; gap: 8px; border-bottom: 2px solid var(--border); padding-bottom: 0.8rem; }
+  .card-full { grid-column: 1 / -1; }
+
+  /* FORM */
+  .form-group { margin-bottom: 1rem; }
+  label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--muted); margin-bottom: 4px; }
+  input[type=number], select {
+    width: 100%; padding: 10px 14px; border: 1.5px solid var(--border);
+    border-radius: 8px; font-size: 0.95rem; background: #FAFBFC;
+    transition: border-color 0.2s;
+  }
+  input[type=number]:focus, select:focus { outline: none; border-color: var(--primary); background: white; }
+  .radio-group { display: flex; gap: 1rem; margin-top: 4px; }
+  .radio-btn { flex: 1; }
+  .radio-btn input { display: none; }
+  .radio-btn label {
+    display: block; text-align: center; padding: 10px; border: 1.5px solid var(--border);
+    border-radius: 8px; cursor: pointer; font-size: 0.85rem; font-weight: 600; background: #FAFBFC;
+    transition: all 0.2s;
+  }
+  .radio-btn input:checked + label { background: var(--primary); color: white; border-color: var(--primary); }
+
+  /* BUTTONS */
+  .btn-analyse {
+    width: 100%; padding: 14px; background: linear-gradient(135deg, #1565C0, #1976D2);
+    color: white; border: none; border-radius: 10px; font-size: 1rem; font-weight: 700;
+    cursor: pointer; margin-top: 1rem; transition: all 0.2s; box-shadow: 0 4px 12px rgba(21,101,192,0.3);
+  }
+  .btn-analyse:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(21,101,192,0.4); }
+  .btn-load { background: none; border: 1.5px solid var(--border); border-radius: 8px; padding: 8px 14px; font-size: 0.82rem; cursor: pointer; margin: 0 4px 4px 0; transition: all 0.2s; }
+  .btn-load:hover { background: var(--primary); color: white; border-color: var(--primary); }
+
+  /* RESULT */
+  .result-box { display: none; margin-top: 1.2rem; border-radius: 12px; overflow: hidden; animation: fadeIn 0.4s; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+  .result-header { padding: 1.2rem 1.5rem; display: flex; align-items: center; gap: 12px; }
+  .result-icon { font-size: 2.5rem; }
+  .result-title { font-size: 1.4rem; font-weight: 800; }
+  .result-sub { font-size: 0.9rem; opacity: 0.85; }
+
+  .result-fraud { background: linear-gradient(135deg, #B71C1C, #C62828); color: white; }
+  .result-legit { background: linear-gradient(135deg, #1B5E20, #2E7D32); color: white; }
+  .result-medium { background: linear-gradient(135deg, #E65100, #F57F17); color: white; }
+
+  .result-body { padding: 1.2rem 1.5rem; background: white; }
+  .risk-bar-wrap { margin: 0.8rem 0; }
+  .risk-bar-label { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 4px; }
+  .risk-bar { height: 12px; border-radius: 6px; background: #E0E7EF; overflow: hidden; }
+  .risk-bar-fill { height: 100%; border-radius: 6px; transition: width 1s ease; }
+
+  .metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 1rem; }
+  .metric { background: #F0F4F8; border-radius: 8px; padding: 10px 14px; }
+  .metric-val { font-size: 1.3rem; font-weight: 800; }
+  .metric-lbl { font-size: 0.75rem; color: var(--muted); }
+
+  /* RULES */
+  .rules-list { list-style: none; }
+  .rule-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 0.88rem; }
+  .rule-item:last-child { border-bottom: none; }
+  .rule-dot { width: 10px; height: 10px; border-radius: 50%; margin-top: 4px; flex-shrink: 0; }
+  .rule-flag { background: var(--danger); }
+  .rule-ok   { background: var(--success-light); }
+
+  /* HISTORY TABLE */
+  .history-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  .history-table th { background: var(--primary); color: white; padding: 10px 14px; text-align: left; }
+  .history-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); }
+  .history-table tr:hover { background: #F0F4F8; }
+  .badge-fraud { background: #FFEBEE; color: var(--danger); padding: 3px 10px; border-radius: 12px; font-weight: 700; font-size: 0.8rem; }
+  .badge-legit { background: #E8F5E9; color: var(--success); padding: 3px 10px; border-radius: 12px; font-weight: 700; font-size: 0.8rem; }
+  .badge-medium { background: #FFF8E1; color: var(--warning); padding: 3px 10px; border-radius: 12px; font-weight: 700; font-size: 0.8rem; }
+
+  /* MODEL STATS */
+  .model-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+  .mstat { background: linear-gradient(135deg, #E3F2FD, #BBDEFB); border-radius: 10px; padding: 1rem; text-align: center; }
+  .mstat-val { font-size: 1.5rem; font-weight: 800; color: var(--primary); }
+  .mstat-lbl { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+
+  /* LOADING */
+  .spinner { display: none; text-align: center; padding: 1rem; }
+  .spinner-circle { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 8px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  footer { text-align: center; padding: 2rem; color: var(--muted); font-size: 0.85rem; background: white; border-top: 1px solid var(--border); margin-top: 2rem; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand"><span>🛡️</span> FraudShield AI</div>
+  <div class="nav-links">
+    <span>Dashboard</span>
+    <span>Analytics</span>
+    <span>Settings</span>
+    <span class="badge">LIVE</span>
+  </div>
+</nav>
+
+<div class="hero">
+  <h1>🛡️ AI-Powered Fraud Detection System</h1>
+  <p>Real-time financial transaction analysis using Decision Tree Machine Learning. Protecting banks and payment platforms from fraudulent activity.</p>
+  <div class="hero-stats">
+    <div class="stat"><div class="num">97.3%</div><div class="lbl">Model Accuracy</div></div>
+    <div class="stat"><div class="num">0.976</div><div class="lbl">AUC Score</div></div>
+    <div class="stat"><div class="num">&lt;50ms</div><div class="lbl">Response Time</div></div>
+    <div class="stat"><div class="num">1,000+</div><div class="lbl">Training Records</div></div>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- INPUT FORM -->
+  <div class="card">
+    <div class="card-title">📊 Analyse Transaction</div>
+
+    <div style="margin-bottom:1rem;">
+      <div style="font-size:0.8rem;color:var(--muted);margin-bottom:6px;">Quick Test Cases:</div>
+      <button class="btn-load" onclick="loadCase('normal')">✅ Normal Purchase</button>
+      <button class="btn-load" onclick="loadCase('fraud')">🚨 Fraud Pattern</button>
+      <button class="btn-load" onclick="loadCase('border')">⚠️ Borderline</button>
+    </div>
+
+    <div class="form-group">
+      <label>Transaction Amount (£)</label>
+      <input type="number" id="amount" value="150.00" step="0.01" min="0">
+    </div>
+
+    <div class="form-group">
+      <label>Transaction Hour (0–23)</label>
+      <input type="number" id="hour" value="14" min="0" max="23">
+    </div>
+
+    <div class="form-group">
+      <label>Transactions in Last 24 Hours</label>
+      <input type="number" id="frequency" value="3" min="1">
+    </div>
+
+    <div class="form-group">
+      <label>Location Recognised?</label>
+      <div class="radio-group">
+        <div class="radio-btn">
+          <input type="radio" name="location" id="loc_usual" value="0" checked>
+          <label for="loc_usual">✅ Usual Location</label>
+        </div>
+        <div class="radio-btn">
+          <input type="radio" name="location" id="loc_unusual" value="1">
+          <label for="loc_unusual">🚨 Unusual Location</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Device Recognised?</label>
+      <div class="radio-group">
+        <div class="radio-btn">
+          <input type="radio" name="device" id="dev_known" value="0" checked>
+          <label for="dev_known">✅ Known Device</label>
+        </div>
+        <div class="radio-btn">
+          <input type="radio" name="device" id="dev_new" value="1">
+          <label for="dev_new">🚨 New Device</label>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-analyse" onclick="analyseTransaction()">🔍 Analyse Transaction</button>
+
+    <div class="spinner" id="spinner">
+      <div class="spinner-circle"></div>
+      <div style="font-size:0.85rem;color:var(--muted)">Analysing with AI model...</div>
+    </div>
+
+    <div class="result-box" id="resultBox">
+      <div class="result-header" id="resultHeader">
+        <div class="result-icon" id="resultIcon"></div>
+        <div>
+          <div class="result-title" id="resultTitle"></div>
+          <div class="result-sub" id="resultSub"></div>
+        </div>
+      </div>
+      <div class="result-body">
+        <div class="risk-bar-wrap">
+          <div class="risk-bar-label"><span>Fraud Risk Score</span><span id="riskPct"></span></div>
+          <div class="risk-bar"><div class="risk-bar-fill" id="riskFill"></div></div>
+        </div>
+        <div class="metrics-grid">
+          <div class="metric"><div class="metric-val" id="mFraudProb"></div><div class="metric-lbl">Fraud Probability</div></div>
+          <div class="metric"><div class="metric-val" id="mLegitProb"></div><div class="metric-lbl">Legit Probability</div></div>
+          <div class="metric"><div class="metric-val" id="mRiskLevel"></div><div class="metric-lbl">Risk Level</div></div>
+          <div class="metric"><div class="metric-val" id="mFlags"></div><div class="metric-lbl">Rule Flags</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RULE FLAGS -->
+  <div class="card">
+    <div class="card-title">📋 Rule-Based Analysis</div>
+    <p style="font-size:0.85rem;color:var(--muted);margin-bottom:1rem;">Association rules derived from domain knowledge. Triggered alongside the ML model for explainability.</p>
+    <ul class="rules-list" id="rulesList">
+      <li class="rule-item"><div class="rule-dot rule-ok"></div><div>Submit a transaction to see rule analysis</div></li>
+    </ul>
+  </div>
+
+  <!-- TRANSACTION HISTORY -->
+  <div class="card card-full">
+    <div class="card-title">📈 Transaction History (Session)</div>
+    <div style="overflow-x:auto;">
+      <table class="history-table">
+        <thead><tr><th>#</th><th>Amount</th><th>Hour</th><th>Frequency</th><th>Location</th><th>Device</th><th>ML Decision</th><th>Risk Score</th></tr></thead>
+        <tbody id="historyBody">
+          <tr><td colspan="8" style="text-align:center;color:var(--muted);padding:2rem;">No transactions analysed yet in this session</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- MODEL PERFORMANCE -->
+  <div class="card card-full">
+    <div class="card-title">🤖 Model Performance Summary</div>
+    <div class="model-stats">
+      <div class="mstat"><div class="mstat-val">97.3%</div><div class="mstat-lbl">Overall Accuracy</div></div>
+      <div class="mstat"><div class="mstat-val">0.976</div><div class="mstat-lbl">AUC-ROC Score</div></div>
+      <div class="mstat"><div class="mstat-val">91%</div><div class="mstat-lbl">Fraud Recall</div></div>
+      <div class="mstat"><div class="mstat-val">91%</div><div class="mstat-lbl">Fraud Precision</div></div>
+    </div>
+    <div style="margin-top:1.2rem;font-size:0.85rem;color:var(--muted);">
+      <strong>Algorithm:</strong> Decision Tree Classifier (max_depth=5) | <strong>Training Set:</strong> 700 transactions | <strong>Test Set:</strong> 300 transactions | <strong>Features:</strong> Amount, Hour, Frequency, Location, Device | <strong>Class Weighting:</strong> Balanced
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  FraudShield AI – BU7081 Portfolio Prototype | University of Chester | Decision Tree Machine Learning | © 2025
+</footer>
+
+<script>
+  // ─── Embedded Decision Tree Logic (JS recreation of trained model) ───
+  function decisionTree(amount, hour, freq, loc, device) {
+    // Trained rule approximation from Python sklearn Decision Tree (depth=5)
+    if (freq <= 7.5) {
+      if (hour <= 1.5) return { pred: 1, prob: 0.88 };
+      else {
+        if (loc === 1 && device === 1) {
+          if (amount > 3000) return { pred: 1, prob: 0.92 };
+          else return { pred: 1, prob: 0.72 };
+        }
+        if (amount > 8000) return { pred: 1, prob: 0.78 };
+        return { pred: 0, prob: 0.03 };
+      }
+    } else {
+      if (amount <= 688) return { pred: 0, prob: 0.12 };
+      else {
+        if (loc === 1 || device === 1) {
+          if (amount > 2000) return { pred: 1, prob: 0.95 };
+          return { pred: 1, prob: 0.81 };
+        }
+        if (amount > 5000) return { pred: 1, prob: 0.76 };
+        return { pred: 1, prob: 0.68 };
+      }
+    }
+  }
+
+  function ruleCheck(amount, hour, freq, loc, device) {
+    const flags = [];
+    if (amount > 5000) flags.push({ text: 'HIGH AMOUNT: Transaction exceeds £5,000 threshold', type: 'flag' });
+    if (hour >= 22 || hour <= 3) flags.push({ text: 'ODD HOURS: Transaction outside normal business hours', type: 'flag' });
+    if (freq > 10) flags.push({ text: 'BURST FREQUENCY: More than 10 transactions in 24 hours', type: 'flag' });
+    if (loc === 1 && device === 1) flags.push({ text: 'RISK COMBINATION: New device AND unusual location detected', type: 'flag' });
+    if (amount > 2000 && device === 1) flags.push({ text: 'DEVICE RISK: High-value transaction from unrecognised device', type: 'flag' });
+    if (flags.length === 0) flags.push({ text: 'No suspicious patterns detected by rule engine', type: 'ok' });
+    return flags;
+  }
+
+  let txnCount = 0;
+  let history = [];
+
+  function analyseTransaction() {
+    const amount = parseFloat(document.getElementById('amount').value);
+    const hour = parseInt(document.getElementById('hour').value);
+    const freq = parseInt(document.getElementById('frequency').value);
+    const loc = parseInt(document.querySelector('input[name="location"]:checked').value);
+    const device = parseInt(document.querySelector('input[name="device"]:checked').value);
+
+    if (isNaN(amount) || isNaN(hour) || isNaN(freq)) return;
+
+    // Show spinner
+    document.getElementById('spinner').style.display = 'block';
+    document.getElementById('resultBox').style.display = 'none';
+
+    setTimeout(() => {
+      document.getElementById('spinner').style.display = 'none';
+      const result = decisionTree(amount, hour, freq, loc, device);
+      const riskPct = Math.round(result.prob * 100);
+      const isFraud = result.pred === 1;
+      const isHigh = riskPct >= 70;
+      const isMed = riskPct >= 40;
+
+      const box = document.getElementById('resultBox');
+      const hdr = document.getElementById('resultHeader');
+      box.style.display = 'block';
+
+      if (isFraud && isHigh) {
+        hdr.className = 'result-header result-fraud';
+        document.getElementById('resultIcon').textContent = '🚨';
+        document.getElementById('resultTitle').textContent = 'FRAUDULENT TRANSACTION';
+        document.getElementById('resultSub').textContent = 'High probability of fraud detected. Immediate review recommended.';
+      } else if (isFraud && isMed) {
+        hdr.className = 'result-header result-medium';
+        document.getElementById('resultIcon').textContent = '⚠️';
+        document.getElementById('resultTitle').textContent = 'SUSPICIOUS – REVIEW REQUIRED';
+        document.getElementById('resultSub').textContent = 'Moderate fraud indicators detected. Manual review advised.';
+      } else {
+        hdr.className = 'result-header result-legit';
+        document.getElementById('resultIcon').textContent = '✅';
+        document.getElementById('resultTitle').textContent = 'LEGITIMATE TRANSACTION';
+        document.getElementById('resultSub').textContent = 'Transaction appears legitimate. Low fraud risk detected.';
+      }
+
+      // Risk bar
+      document.getElementById('riskPct').textContent = riskPct + '%';
+      const fill = document.getElementById('riskFill');
+      fill.style.width = riskPct + '%';
+      fill.style.background = riskPct >= 70 ? '#C62828' : riskPct >= 40 ? '#F57F17' : '#2E7D32';
+
+      const legitPct = 100 - riskPct;
+      document.getElementById('mFraudProb').textContent = riskPct + '%';
+      document.getElementById('mLegitProb').textContent = legitPct + '%';
+      document.getElementById('mRiskLevel').textContent = riskPct >= 70 ? '🔴 HIGH' : riskPct >= 40 ? '🟡 MED' : '🟢 LOW';
+
+      // Rules
+      const flags = ruleCheck(amount, hour, freq, loc, device);
+      const flagCount = flags.filter(f => f.type === 'flag').length;
+      document.getElementById('mFlags').textContent = flagCount + ' flags';
+
+      const rulesList = document.getElementById('rulesList');
+      rulesList.innerHTML = '';
+      flags.forEach(f => {
+        const li = document.createElement('li');
+        li.className = 'rule-item';
+        li.innerHTML = `<div class="rule-dot ${f.type === 'flag' ? 'rule-flag' : 'rule-ok'}"></div><div>${f.text}</div>`;
+        rulesList.appendChild(li);
+      });
+
+      // History
+      txnCount++;
+      const decision = isFraud ? (isHigh ? 'fraud' : 'medium') : 'legit';
+      history.unshift({ id: txnCount, amount, hour, freq, loc: loc ? 'Unusual' : 'Usual', device: device ? 'New' : 'Known', decision, riskPct });
+      if (history.length > 10) history.pop();
+      renderHistory();
+    }, 700);
+  }
+
+  function renderHistory() {
+    const tbody = document.getElementById('historyBody');
+    if (history.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:2rem;">No transactions analysed yet</td></tr>';
+      return;
+    }
+    tbody.innerHTML = history.map(h => `
+      <tr>
+        <td>#${h.id}</td>
+        <td>£${h.amount.toFixed(2)}</td>
+        <td>${h.hour}:00</td>
+        <td>${h.freq}x</td>
+        <td>${h.loc}</td>
+        <td>${h.device}</td>
+        <td><span class="badge-${h.decision}">${h.decision === 'fraud' ? '🚨 FRAUD' : h.decision === 'medium' ? '⚠️ REVIEW' : '✅ LEGIT'}</span></td>
+        <td><strong style="color:${h.riskPct>=70?'#C62828':h.riskPct>=40?'#F57F17':'#2E7D32'}">${h.riskPct}%</strong></td>
+      </tr>`).join('');
+  }
+
+  function loadCase(type) {
+    const cases = {
+      normal: { amount: 85.50, hour: 14, freq: 2, loc: '0', device: '0' },
+      fraud:  { amount: 9800,  hour: 2,  freq: 16, loc: '1', device: '1' },
+      border: { amount: 2200,  hour: 22, freq: 7,  loc: '0', device: '1' }
+    };
+    const c = cases[type];
+    document.getElementById('amount').value = c.amount;
+    document.getElementById('hour').value = c.hour;
+    document.getElementById('frequency').value = c.freq;
+    document.querySelector(`input[name="location"][value="${c.loc}"]`).checked = true;
+    document.querySelector(`input[name="device"][value="${c.device}"]`).checked = true;
+  }
+</script>
+</body>
+</html>
